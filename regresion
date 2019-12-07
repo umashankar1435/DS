@@ -1,0 +1,102 @@
+f=open("D:/uma/pacient.txt")
+h=f.readline()
+lines=f.readlines()
+x=[]
+y=[]
+for line in lines:
+    w=line.strip().split(",")
+    ftr=[float(v) for v in w[3:-1]]
+    x.append(ftr)
+    o=float(w[-1])
+    y.append(o)
+"""
+scale the data
+"""
+def sd(x):
+    return (((x-x.mean())**2).sum()/ (x.size-1))**0.5
+def scale(x):
+    return (x-x.mean())/sd(x)
+def scaleMatrix(x):
+    # x is matrix
+    ncol = x.shape[1]
+    for c in range(ncol):
+        col = x[:,c]
+        x[:,c]=scale(col)
+    return x 
+"""
+add baise & prepair feature mtrix and label matrix
+"""
+import numpy as np
+x =np.array(x)
+X = np.ones((x.shape[0], x.shape[1]+1))
+print(X)
+s = scaleMatrix(x)
+X[:,1:]=s
+print(X)
+y=np.array(y)
+Y = np.c_[scale(y)]
+print(Y)
+"""
+initialization of random weights
+"""
+np.random.seed(100)
+beta=2*np.random.random((X.shape[1],1))-1
+"""
+calculate  predictions
+""""
+def predict(x,beta):
+    return x.dot(beta)
+"""
+calculate error
+"""
+def mse(y,ycap):
+    return ((y-ycap)**2).mean()
+"""
+calculate derivatives
+"""
+def derivative(x,y,beta):
+    ycap=predict(x,beta)
+    return (x.T.dot(y-ycap))/y.size
+"""
+train the network 
+"""
+def train(x,y,beta,iter,lrate,conv=0.00000001):
+    perr=0
+    flag=0
+    for i in range(iter):
+        ycap=predict(x,beta)
+        cerr=mse(y,ycap)
+        diff=abs(perr-cerr)
+        if diff<=conv:
+            print("trining cmptld",i+1,"iteratinons")
+            flag=1
+            break
+        if i%1000==0:
+            print("current loss",cerr)
+        grad=derivative(x,y,beta)
+        beta+=grad*lrate
+        perr=cerr
+    if flag==0:
+        print("trining notcmplt")
+        return beta
+theta=train(X,Y,beta,100000,0.02)
+print(theta
+"""
+predictions
+"""
+Ycap=predict(X,beta)
+print(ycap)
+"""
+user con't understad csale values so again unscale the data
+"""
+Yc = Ycap*sd(y) + y.mean()
+np.c_[y, Yc]
+"""
+accuracy
+"""
+def accuracy(y,ycap,closeness):
+    de=100-closeness
+    d = abs(y-ycap)/y * 100
+    return d[d<=de].size / d.size * 100
+acc=accuracy(y,Yc,80)
+print(acc)
