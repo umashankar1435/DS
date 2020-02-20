@@ -1,1 +1,36 @@
+import pandas as pd
 
+df=pd.read_excel("D:\\project\\titanic3.xlsx")
+
+df.drop(["PassengerId", "Pclass", "Name", "Embarked", "Ticket", 
+                                    "Cabin"], axis = 1, inplace = True)
+
+df["Sex"] = df["Sex"].map({"male":1, "female":0})
+
+df=df.fillna(df.mean())
+df=df.round(0)
+df
+
+#SEPEATE THE FEATURES & TARGETS
+features=df.iloc[:,1:]
+target=df.iloc[:,:1]
+
+from sklearn.model_selection import train_test_split
+X_train,X_test,Y_train,Y_test = train_test_split(labels,target,test_size=0.30,random_state=0)
+
+#LOGISTIC REGRESSION
+from sklearn.linear_model import LogisticRegression
+model=LogisticRegression()
+LR=model.fit(X_train, Y_train)
+pre=model.predict(X_test)
+from sklearn.metrics import accuracy_score
+accuracy_score(Y_test,pre)
+
+
+#RANDOM FOREST
+from sklearn.ensemble import RandomForestClassifier
+model=RandomForestClassifier()
+LR=model.fit(X_train, Y_train)
+pre=model.predict(X_test)
+from sklearn.metrics import accuracy_score
+accuracy_score(Y_test,pre)
