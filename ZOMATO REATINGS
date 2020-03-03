@@ -1,0 +1,64 @@
+import numpy as np 
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import r2_score
+#read the file
+df=pd.read_excel("C:/Users/Vishnu Vardhan/Downloads/zomato_train.xlsx")
+df.head()
+drop the unwanted features & modefied features
+df.isnull().sum()
+zomato=df.drop(['url','dish_liked','phone'],axis=1)
+zomato.columns
+zomato.rename({'approx_cost(for two people)': 'approx_cost_for_2_people',
+               'listed_in(type)':'listed_in_type',
+               'listed_in(city)':'listed_in_city'
+              }, axis=1, inplace=True)
+zomato.columns
+# caluaulate the null values & fill the null values &also remove slash 
+remove_comma = lambda x: int(x.replace(',', '')) if type(x) == np.str and x != np.nan else x 
+zomato.votes = zomato.votes.astype('float')
+zomato['approx_cost_for_2_people'] = zomato['approx_cost_for_2_people'].apply(remove_comma)
+zomato['rates'].unique()
+zomato = zomato.loc[zomato.rates !='NEW']
+zomato = zomato.loc[zomato.rates !='-'].reset_index(drop=True)
+zomato
+remove_slash = lambda x: x.replace('/5', '') if type(x) == np.str else x
+zomato.rate = zomato.rates.apply(remove_slash).str.strip().astype('float')
+#all text data converted into numaric data 
+def Encode(zomato):
+    for column in zomato.columns[~zomato.columns.isin(['rates', 'approx_cost_for_2_people', 'votes'])]:
+        zomato[column] = zomato[column].factorize()[0]
+    return zomato
+zomato_en = Encode(zomato.copy())
+zomato_en
+zomato_en['rates'] = zomato_en['rates'].fillna(method='ffill')
+zomato_en['approx_cost_for_2_people'] = zomato_en['approx_cost_for_2_people'].fillna(zomato_en['approx_cost_for_2_people'].mean())
+zomato_en.isna().sum()
+zomato_en.columns
+#seperate the features & targets 
+x = zomato_en.iloc[:,:-1]
+y = zomato_en['rates']
+x_train,x_test,y_train,y_test=train_test_split(x,y,test_size=.1,random_state=353)
+#imoprt the models & test the accuracy
+#LinearRegression model
+from sklearn.linear_model import LinearRegression
+reg=LinearRegression()
+reg.fit(x_train,y_train)
+y_pred=reg.predict(x_test)
+from sklearn.metrics import r2_score
+r2_score(y_test,y_pred)
+#DecisionTreeRegressor model
+from sklearn.tree import DecisionTreeRegressor
+x_train,x_test,y_train,y_test=train_test_split(x,y,test_size=.1,random_state=105)
+DTree=DecisionTreeRegressor(min_samples_leaf=.0001)
+DTree.fit(x_train,y_train)
+y_predict=DTree.predict(x_test)
+from sklearn.metrics import r2_score
+r2_score(y_test,y_predict)
+# RandomForestRegressor model
+from sklearn.ensemble import RandomForestRegressor
+RForest=RandomForestRegressor(n_estimators=5,random_state=300,min_samples_leaf=.0001)
+RForest.fit(x_train,y_train)
+y_predict=RForest.predict(x_test)
+from sklearn.metrics import r2_score
+r2_score(y_test,y_predict)
